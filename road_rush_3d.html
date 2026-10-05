@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Road Rush 3D</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#081018;font-family:Arial,sans-serif;touch-action:none}
+#game{position:relative;width:100vw;height:100vh;height:100svh;overflow:hidden;background:#75c9ef}
+#sky{position:absolute;inset:0 0 52%;background:linear-gradient(#56b8ed 0%,#a9e4f7 70%,#d9f5df 100%)}
+#sun{position:absolute;width:70px;height:70px;border-radius:50%;right:10%;top:8%;background:#ffe99a;box-shadow:0 0 35px #fff1a8}
+#horizon{position:absolute;left:0;right:0;top:32%;height:23%;background:
+  linear-gradient(150deg,transparent 0 22%,#5e9a55 23% 28%,transparent 29% 100%),
+  linear-gradient(30deg,transparent 0 34%,#6aa05b 35% 42%,transparent 43% 100%),
+  linear-gradient(#9ac58c,#67985e)}
+#world{position:absolute;inset:0;perspective:650px;overflow:hidden}
+#road{
+ position:absolute;left:50%;top:33%;width:34%;height:82%;
+ transform:translateX(-50%) rotateX(64deg);
+ transform-origin:50% 0%;
+ background:
+   repeating-linear-gradient(to bottom,transparent 0 7%,rgba(255,255,255,.95) 7% 8.3%,transparent 8.3% 16.5%),
+   linear-gradient(90deg,#555,#343434);
+ box-shadow:0 0 0 3px #2b2b2b;
+}
+#road:before,#road:after{content:"";position:absolute;top:0;width:8px;height:100%;background:#f5f5f5}
+#road:before{left:0}.#road:after{right:0}
+.laneLine{position:absolute;top:0;width:5px;height:100%;background:repeating-linear-gradient(to bottom,#eee 0 5%,transparent 5% 12%);opacity:.9}
+.l1{left:33.33%}.l2{left:66.66%}
+#grassL,#grassR{position:absolute;top:34%;height:78%;width:34%;background:
+ repeating-linear-gradient(25deg,rgba(255,255,255,.08) 0 2px,transparent 2px 20px),
+ linear-gradient(#4c9b4a,#247536);transform-origin:top}
+#grassL{right:67%;transform:perspective(600px) rotateX(64deg) rotateY(22deg)}
+#grassR{left:67%;transform:perspective(600px) rotateX(64deg) rotateY(-22deg)}
+#trees{position:absolute;inset:0;pointer-events:none}
+.tree{position:absolute;width:34px;height:55px;transform:translate(-50%,-50%);filter:drop-shadow(0 4px 2px rgba(0,0,0,.25))}
+.tree:before{content:"";position:absolute;left:14px;bottom:0;width:7px;height:25px;background:#6d4425}
+.tree:after{content:"";position:absolute;left:0;top:0;width:34px;height:34px;border-radius:50%;background:#27763c;box-shadow:10px 7px 0 #328b45,-10px 8px 0 #2f8241}
+#player{
+ position:absolute;left:50%;bottom:10%;width:58px;height:96px;z-index:10;
+ transform:translateX(-50%);transition:left .12s ease;
+}
+.carBody{position:absolute;bottom:0;left:5px;width:48px;height:78px;border-radius:12px 12px 7px 7px;background:linear-gradient(90deg,#b80f22,#f63a42,#9d0718);box-shadow:0 5px 10px rgba(0,0,0,.45);border:2px solid #720914}
+.carTop{position:absolute;left:12px;top:13px;width:34px;height:35px;border-radius:10px 10px 5px 5px;background:#243746;border:2px solid #111}
+.wheel{position:absolute;width:10px;height:25px;border-radius:5px;background:#111;top:40px}.wl{left:-2px}.wr{right:-2px}
+.light{position:absolute;width:9px;height:7px;border-radius:3px;background:#fff2b0;bottom:6px}.ll{left:9px}.lr{right:9px}
+.obstacle{position:absolute;width:54px;height:82px;z-index:8;transform:translate(-50%,-50%);transition:none}
+.obstacle .body{position:absolute;bottom:0;left:5px;width:44px;height:70px;border-radius:11px 11px 7px 7px;background:linear-gradient(90deg,#172d91,#3f73e8,#17256e);border:2px solid #101a55;box-shadow:0 5px 10px rgba(0,0,0,.4)}
+.obstacle .glass{position:absolute;left:11px;top:11px;width:32px;height:27px;border-radius:8px 8px 4px 4px;background:#a9d9e9;border:2px solid #18243a}
+.obstacle .wheel{top:38px}.obstacle .wl{left:-1px}.obstacle .wr{right:-1px}
+#hud{position:absolute;z-index:20;top:max(12px,env(safe-area-inset-top));left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}
+.card{background:rgba(8,15,25,.72);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:9px 13px;backdrop-filter:blur(6px);min-width:105px;text-align:center}
+.card b{display:block;font-size:21px}.card small{opacity:.75}
+#message{position:absolute;z-index:30;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;background:rgba(0,0,0,.42);color:#fff}
+#panel{width:min(86vw,340px);padding:24px;border-radius:22px;background:rgba(9,18,30,.92);box-shadow:0 15px 50px #0008}
+#panel h1{margin:0 0 8px;font-size:30px}#panel p{color:#cbd5e1;line-height:1.45}
+button{border:0;border-radius:14px;padding:13px 20px;font-size:17px;font-weight:bold;background:#f5c542;color:#171717}
+#controls{position:absolute;z-index:25;bottom:max(18px,env(safe-area-inset-bottom));left:0;right:0;display:flex;justify-content:space-between;padding:0 20px}
+.ctrl{width:74px;height:58px;border-radius:18px;background:rgba(8,15,25,.72);color:white;border:1px solid #ffffff33;font-size:28px}
+#tip{position:absolute;z-index:21;bottom:84px;left:50%;transform:translateX(-50%);color:#fff;background:#0008;padding:6px 10px;border-radius:10px;font-size:12px;pointer-events:none}
+@media(min-width:700px){#player{width:68px}.carBody{left:5px;width:58px}.obstacle{width:64px}}
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="sky"></div><div id="sun"></div><div id="horizon"></div>
+  <div id="world">
+    <div id="grassL"></div><div id="grassR"></div>
+    <div id="road"><div class="laneLine l1"></div><div class="laneLine l2"></div></div>
+    <div id="trees"></div>
+    <div id="player">
+      <div class="carBody"><div class="carTop"></div><i class="wheel wl"></i><i class="wheel wr"></i><i class="light ll"></i><i class="light lr"></i></div>
+    </div>
+  </div>
+  <div id="hud">
+    <div class="card"><small>SCORE</small><b id="score">0</b></div>
+    <div class="card"><small>SPEED</small><b id="speed">1.0x</b></div>
+  </div>
+  <div id="tip">← / → or swipe to change lane</div>
+  <div id="controls"><button class="ctrl" id="left">◀</button><button class="ctrl" id="right">▶</button></div>
+  <div id="message">
+    <div id="panel">
+      <h1 id="title">ROAD RUSH 3D</h1>
+      <p id="subtitle">Dodge traffic, stay on the road and survive as long as possible.</p>
+      <button id="start">START GAME</button>
+    </div>
+  </div>
+</div>
+<script>
+(() => {
+  "use strict";
+  const game=document.getElementById("game"), player=document.getElementById("player");
+  const scoreEl=document.getElementById("score"), speedEl=document.getElementById("speed");
+  const message=document.getElementById("message"), title=document.getElementById("title");
+  const subtitle=document.getElementById("subtitle"), startBtn=document.getElementById("start");
+  const trees=document.getElementById("trees");
+  const lanes=[-1,0,1];
+  let lane=1, running=false, score=0, speed=1, last=0, spawnTimer=0, treeTimer=0;
+  let obstacles=[], raf=0, treeNodes=[];
+  let best=Number(localStorage.getItem("roadRushBest")||0);
+
+  function laneX(l){ return 50 + (l-1)*10.5; }
+  function setPlayer(){ player.style.left=laneX(lane)+"%"; }
+
+  function makeTrees(){
+    trees.innerHTML=""; treeNodes=[];
+    for(let i=0;i<18;i++){
+      const t=document.createElement("div"); t.className="tree";
+      const side=i%2===0?-1:1;
+      t.dataset.z=0.05+(i/18)*0.9;
+      t.dataset.side=side;
+      trees.appendChild(t); treeNodes.push(t);
+    }
+  }
+  function updateTrees(dt){
+    treeNodes.forEach((t,i)=>{
+      let z=Number(t.dataset.z); z+=dt*0.00042*speed;
+      if(z>1.08) z-=1.03;
+      t.dataset.z=z;
+      const side=Number(t.dataset.side);
+      const y=34+z*64, x=50+side*(27+z*26);
+      const s=.25+z*1.15;
+      t.style.left=x+"%"; t.style.top=y+"%"; t.style.transform=`translate(-50%,-50%) scale(${s})`;
+      t.style.zIndex=Math.floor(z*7);
+    });
+  }
+
+  function spawnObstacle(){
+    const o=document.createElement("div"); o.className="obstacle";
+    o.innerHTML='<div class="body"><div class="glass"></div><i class="wheel wl"></i><i class="wheel wr"></i></div>';
+    const l=Math.floor(Math.random()*3);
+    o.dataset.lane=l; o.dataset.z=0;
+    document.getElementById("world").appendChild(o);
+    obstacles.push(o);
+  }
+
+  function updateObstacles(dt){
+    const remove=[];
+    for(let i=0;i<obstacles.length;i++){
+      const o=obstacles[i];
+      let z=Number(o.dataset.z);
+      z+=dt*0.00075*speed;
+      o.dataset.z=z;
+      const l=Number(o.dataset.lane);
+      const x=laneX(l);
+      const y=36+z*58;
+      const scale=.22+z*1.05;
+      o.style.left=x+"%"; o.style.top=y+"%";
+      o.style.transform=`translate(-50%,-50%) scale(${scale})`;
+      o.style.zIndex=Math.floor(8+z*10);
+
+      if(z>.91 && z<1.04 && l===lane){
+        endGame(); return;
+      }
+      if(z>1.13) remove.push(i);
+    }
+    for(let i=remove.length-1;i>=0;i--){obstacles[remove[i]].remove();obstacles.splice(remove[i],1)}
+  }
+
+  function move(dir){
+    if(!running)return;
+    lane=Math.max(0,Math.min(2,lane+dir));
+    setPlayer();
+  }
+
+  function endGame(){
+    if(!running)return;
+    running=false; cancelAnimationFrame(raf);
+    best=Math.max(best,Math.floor(score));
+    try{localStorage.setItem("roadRushBest",best)}catch(e){}
+    title.textContent="GAME OVER";
+    subtitle.innerHTML=`Score: <b>${Math.floor(score)}</b><br>Best: <b>${best}</b><br><br>Tap restart and try to beat your record.`;
+    startBtn.textContent="RESTART";
+    message.style.display="flex";
+  }
+
+  function reset(){
+    obstacles.forEach(o=>o.remove()); obstacles=[];
+    lane=1; score=0; speed=1; spawnTimer=0; last=performance.now();
+    setPlayer(); scoreEl.textContent="0"; speedEl.textContent="1.0x";
+  }
+
+  function loop(now){
+    if(!running)return;
+    const dt=Math.min(40,now-last); last=now;
+    score+=dt*0.012*speed;
+    speed=1+Math.min(3.2,score/700);
+    spawnTimer+=dt;
+    if(spawnTimer>Math.max(430,980-score*0.22)){
+      spawnTimer=0; spawnObstacle();
+      if(speed>2.2 && Math.random()<.18) setTimeout(()=>{if(running)spawnObstacle()},180);
+    }
+    scoreEl.textContent=Math.floor(score);
+    speedEl.textContent=speed.toFixed(1)+"x";
+    updateObstacles(dt); updateTrees(dt);
+    raf=requestAnimationFrame(loop);
+  }
+
+  startBtn.addEventListener("click",()=>{
+    message.style.display="none"; reset(); running=true; last=performance.now(); raf=requestAnimationFrame(loop);
+  });
+  document.getElementById("left").addEventListener("pointerdown",()=>move(-1));
+  document.getElementById("right").addEventListener("pointerdown",()=>move(1));
+  window.addEventListener("keydown",e=>{
+    if(e.key==="ArrowLeft"||e.key.toLowerCase()==="a"){e.preventDefault();move(-1)}
+    if(e.key==="ArrowRight"||e.key.toLowerCase()==="d"){e.preventDefault();move(1)}
+    if((e.key===" "||e.key==="Enter")&&!running){startBtn.click()}
+  });
+
+  let touchX=null,touchY=null;
+  game.addEventListener("touchstart",e=>{
+    if(e.touches.length===1){touchX=e.touches[0].clientX;touchY=e.touches[0].clientY}
+  },{passive:true});
+  game.addEventListener("touchend",e=>{
+    if(touchX===null)return;
+    const dx=e.changedTouches[0].clientX-touchX, dy=e.changedTouches[0].clientY-touchY;
+    if(Math.abs(dx)>35 && Math.abs(dx)>Math.abs(dy)) move(dx>0?1:-1);
+    touchX=touchY=null;
+  },{passive:true});
+
+  makeTrees(); setPlayer();
+})();
+</script>
+</body>
+</html>
